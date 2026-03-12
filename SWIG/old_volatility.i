@@ -187,12 +187,13 @@ class OptionletStripper1 : public StrippedOptionletBase {
                            VolatilityType type = ShiftedLognormal,
                            Real displacement = 0.0,
                            bool dontThrow = false,
+                           bool useEffectiveVolatility = false,
                            Period optionletFrequency = Period()) {
             ext::optional<Period> frequency = ext::nullopt;
             if (optionletFrequency != Period())
                 frequency = optionletFrequency;
             return new OptionletStripper1(parVolSurface, index, switchStrikes, accuracy, maxIter,
-                                          discount, type, displacement, dontThrow, frequency);
+                                          discount, type, displacement, dontThrow, useEffectiveVolatility, frequency);
         }
     }
     const Matrix& capFloorPrices() const;
