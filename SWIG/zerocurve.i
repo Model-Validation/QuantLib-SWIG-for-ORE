@@ -48,6 +48,7 @@ class InterpolatedZeroCurve : public YieldTermStructure {
                           const Interpolator& i = Interpolator(),
                           const YieldTermStructure::Extrapolation extrapolation =
                           YieldTermStructure::Extrapolation::ContinuousForward,
+                          const bool excludeTimeZeroFromInterpolation = false,
                           Compounding compounding = Continuous,
                           Frequency frequency = Annual);
     const std::vector<Time>& times() const;
