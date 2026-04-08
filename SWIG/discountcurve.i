@@ -47,7 +47,8 @@ class InterpolatedDiscountCurve : public YieldTermStructure {
                               const Calendar& calendar = Calendar(),
                               const Interpolator& i = Interpolator(),
                               const YieldTermStructure::Extrapolation extrapolation =
-                              YieldTermStructure::Extrapolation::ContinuousForward);
+                              YieldTermStructure::Extrapolation::ContinuousForward,
+                              const bool excludeTimeZeroFromInterpolation = false);
     const std::vector<Time>& times() const;
     const std::vector<Real>& data() const;
     const std::vector<Date>& dates() const;

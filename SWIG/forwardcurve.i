@@ -45,7 +45,8 @@ class InterpolatedForwardCurve : public YieldTermStructure {
                              const Calendar& calendar = Calendar(),
                              const Interpolator& i = Interpolator(),
                              const YieldTermStructure::Extrapolation extrapolation =
-                             YieldTermStructure::Extrapolation::ContinuousForward);
+                             YieldTermStructure::Extrapolation::ContinuousForward,
+                             const bool excludeTimeZeroFromInterpolation = false);
     const std::vector<Date>& dates() const;
     const std::vector<Rate>& forwards() const;
     #if !defined(SWIGR)
