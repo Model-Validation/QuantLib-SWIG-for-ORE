@@ -741,19 +741,6 @@ class PiecewiseYoYInflationCurve : public YoYInflationTermStructure {
               Real accuracy = 1.0e-12,
               const Interpolator& i = Interpolator());
 
-    PiecewiseYoYInflationCurve(
-              const Date& referenceDate,
-              Date baseDate,
-              Rate baseYoYRate,
-              const Period& lag,
-              Frequency frequency,
-              bool indexIsInterpolated,
-              const DayCounter& dayCounter,
-              const std::vector<ext::shared_ptr<BootstrapHelper<YoYInflationTermStructure> > >& instruments,
-              const ext::shared_ptr<Seasonality>& seasonality = {},
-              Real accuracy = 1.0e-12,
-              const Interpolator& i = Interpolator());
-
     const std::vector<Date>& dates() const;
     const std::vector<Time>& times() const;
     const std::vector<Real>& data() const;
@@ -1147,20 +1134,10 @@ class InterpolatedYoYInflationCurve : public YoYInflationTermStructure {
     %feature("kwargs") InterpolatedYoYInflationCurve;
   public:
     InterpolatedYoYInflationCurve(const Date& referenceDate,
-                                  std::vector<Date>& dates,
+                                  const std::vector<Date>& dates,
                                   const std::vector<Rate>& rates,
                                   const Period& observationLag,
                                   Frequency frequency,
-                                  const DayCounter& dayCounter,
-                                  const ext::shared_ptr<Seasonality>& seasonality = {},
-                                  const Interpolator& interpolator = Interpolator());
-
-    InterpolatedYoYInflationCurve(const Date& referenceDate,
-                                  std::vector<Date>& dates,
-                                  const std::vector<Rate>& rates,
-                                  const Period& lag,
-                                  Frequency frequency,
-                                  bool interpolated,
                                   const DayCounter& dayCounter,
                                   const ext::shared_ptr<Seasonality>& seasonality = {},
                                   const Interpolator& interpolator = Interpolator());
