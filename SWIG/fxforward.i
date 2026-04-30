@@ -12,14 +12,14 @@
 %include types.i
 
 %{
-using QuantLib::FxForward;
-using QuantLib::DiscountingFxForwardEngine;
+typedef QuantLib::FxForward QlFxForward;
+typedef QuantLib::DiscountingFxForwardEngine QlDiscountingFxForwardEngine;
 %}
 
-%shared_ptr(FxForward)
-class FxForward : public Instrument {
+%shared_ptr(QlFxForward)
+class QlFxForward : public Instrument {
   public:
-    FxForward(Real sourceNominal,
+    QlFxForward(Real sourceNominal,
               const Currency& sourceCurrency,
               Real targetNominal,
               const Currency& targetCurrency,
@@ -27,7 +27,7 @@ class FxForward : public Instrument {
               bool paySourceCurrency,
               Natural settlementDays = 2,
               const Calendar& paymentCalendar = Calendar());
-    FxForward(Real sourceNominal,
+    QlFxForward(Real sourceNominal,
               const Currency& sourceCurrency,
               const Currency& targetCurrency,
               Real forwardRate,
@@ -50,10 +50,10 @@ class FxForward : public Instrument {
     Real npvTargetCurrency() const;
 };
 
-%shared_ptr(DiscountingFxForwardEngine)
-class DiscountingFxForwardEngine : public PricingEngine {
+%shared_ptr(QlDiscountingFxForwardEngine)
+class QlDiscountingFxForwardEngine : public PricingEngine {
   public:
-    DiscountingFxForwardEngine(
+    QlDiscountingFxForwardEngine(
         const Handle<YieldTermStructure>& sourceCurrencyDiscountCurve,
         const Handle<YieldTermStructure>& targetCurrencyDiscountCurve,
         const Handle<Quote>& spotFx);

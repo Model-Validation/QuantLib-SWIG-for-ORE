@@ -2,6 +2,10 @@ import math
 import pytest
 import QuantLib as ql
 
+# QuantLib's FxForward is renamed to QlFxForward to avoid clash with QuantExt's FxForward
+FxForward = ql.QlFxForward
+DiscountingFxForwardEngine = ql.QlDiscountingFxForwardEngine
+
 # PyTest fixture for common setup (analogous to the C++ CommonVars struct)
 @pytest.fixture
 def common_vars():
@@ -50,7 +54,7 @@ def test_fx_forward_construction(common_vars):
     sgd_nominal = 1_350_000.0
 
     # Create an FX forward (pay USD, receive SGD) with specified nominals
-    fwd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                        vars["maturity_date"], True)  # paySourceCurrency=True means paying source (USD)
 
     # Check that attributes match the inputs
@@ -70,7 +74,7 @@ def test_fx_forward_construction_with_rate(common_vars):
 
     # Create an FX forward (sell USD) by specifying a forward rate instead of target nominal.
     # paySourceCurrency=True -> paying USD, receiving SGD.
-    fwd = ql.FxForward(nominal, vars["usd"], vars["sgd"], forward_rate, 
+    fwd = FxForward(nominal, vars["usd"], vars["sgd"], forward_rate, 
                        vars["maturity_date"], True)
 
     # The target nominal should be nominal * forward_rate (i.e., 1,000,000 * 1.36)
@@ -90,18 +94,18 @@ def test_contracted_forward_rate(common_vars):
     expected_rate = sgd_nominal / usd_nominal  # expected contracted rate = 1.35
 
     # FX forward constructed with explicit nominals
-    fwd1 = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd1 = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                         vars["maturity_date"], True)
     assert fwd1.forwardRate() == pytest.approx(expected_rate, rel=1e-10)
 
     # FX forward constructed using a forward rate
     input_rate = 1.36
-    fwd2 = ql.FxForward(usd_nominal, vars["usd"], vars["sgd"], input_rate, 
+    fwd2 = FxForward(usd_nominal, vars["usd"], vars["sgd"], input_rate, 
                         vars["maturity_date"], True)
     assert fwd2.forwardRate() == pytest.approx(input_rate, rel=1e-10)
 
     # Now attach a pricing engine and compare contracted vs fair forward rate
-    engine = ql.DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
+    engine = DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
     fwd1.setPricingEngine(engine)
     contracted_rate = fwd1.forwardRate()      # contractual forward rate (still 1.35 in fwd1)
     fair_rate = fwd1.fairForwardRate()        # fair forward rate given curves and spot
@@ -113,7 +117,7 @@ def test_fx_forward_expiry(common_vars):
     vars = common_vars
     past_date = vars["today"] - ql.Period(1, ql.Days)
     # Create a forward with maturity in the past (yesterday)
-    expired_fwd = ql.FxForward(1_000_000.0, vars["usd"], 1_350_000.0, vars["sgd"], 
+    expired_fwd = FxForward(1_000_000.0, vars["usd"], 1_350_000.0, vars["sgd"], 
                                past_date, True)
     assert expired_fwd.isExpired() is True
 
@@ -123,9 +127,9 @@ def test_discounting_fx_forward_engine(common_vars):
     usd_nominal = 1_000_000.0
     sgd_nominal = 1_350_000.0
 
-    fwd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                        vars["maturity_date"], True)  # pay USD, receive SGD
-    engine = ql.DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
+    engine = DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
     fwd.setPricingEngine(engine)
 
     # Ensure NPV is calculated (should not be "null")
@@ -141,9 +145,9 @@ def test_fair_forward_rate(common_vars):
     usd_nominal = 1_000_000.0
     sgd_nominal = 1_350_000.0
 
-    fwd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                        vars["maturity_date"], True)
-    engine = ql.DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
+    engine = DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
     fwd.setPricingEngine(engine)
 
     # Calculate the expected fair forward rate: Spot * (DF_sgd / DF_usd),
@@ -165,7 +169,7 @@ def test_at_the_money(common_vars):
     usd_nominal = 1_000_000.0
 
     # Determine settlement date (for a default 2-day spot settlement forward).
-    temp_fwd = ql.FxForward(usd_nominal, vars["usd"], usd_nominal, vars["sgd"], 
+    temp_fwd = FxForward(usd_nominal, vars["usd"], usd_nominal, vars["sgd"], 
                              vars["maturity_date"], True)  # temporary to get settlementDate
     settlement_date = temp_fwd.settlementDate()
 
@@ -178,9 +182,9 @@ def test_at_the_money(common_vars):
     sgd_nominal_atm = usd_nominal * df_usd * spot_fx / df_sgd
 
     # Create an at-the-money forward (pay USD, receive SGD at the fair forward rate)
-    fwd_atm = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal_atm, vars["sgd"], 
+    fwd_atm = FxForward(usd_nominal, vars["usd"], sgd_nominal_atm, vars["sgd"], 
                            vars["maturity_date"], True)
-    fwd_atm.setPricingEngine(ql.DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"]))
+    fwd_atm.setPricingEngine(DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"]))
 
     # NPV should be approximately zero for an ATM forward
     npv_atm = fwd_atm.NPV()
@@ -193,13 +197,13 @@ def test_position_direction(common_vars):
     sgd_nominal = 1_350_000.0
 
     # Long USD position: pay SGD, receive USD (paySourceCurrency=False means paying target currency)
-    fwd_long_usd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd_long_usd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                                 vars["maturity_date"], False)
     # Short USD position: pay USD, receive SGD (paySourceCurrency=True)
-    fwd_short_usd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd_short_usd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                                  vars["maturity_date"], True)
 
-    engine = ql.DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
+    engine = DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
     fwd_long_usd.setPricingEngine(engine)
     fwd_short_usd.setPricingEngine(engine)
 
@@ -214,9 +218,9 @@ def test_ir_curve_sensitivity(common_vars):
     usd_nominal = 1_000_000.0
     sgd_nominal = 1_350_000.0
 
-    fwd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                        vars["maturity_date"], True)  # pay USD, receive SGD
-    engine = ql.DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
+    engine = DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"])
     fwd.setPricingEngine(engine)
 
     npv_base = fwd.NPV()
@@ -241,9 +245,9 @@ def test_spot_fx_sensitivity(common_vars):
     usd_nominal = 1_000_000.0
     sgd_nominal = 1_350_000.0
 
-    fwd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                        vars["maturity_date"], True)  # pay USD, receive SGD
-    fwd.setPricingEngine(ql.DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"]))
+    fwd.setPricingEngine(DiscountingFxForwardEngine(vars["usd_curve_handle"], vars["sgd_curve_handle"], vars["spot_handle"]))
 
     npv_base = fwd.NPV()
 
@@ -277,19 +281,19 @@ def test_settlement_days(common_vars):
     sgd_nominal = 1_350_000.0
 
     # Overnight (O/N) forward: 0 settlement days
-    fwd_on = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd_on = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                           vars["maturity_date"], True, 0)
     assert fwd_on.settlementDays() == 0
     assert fwd_on.settlementDate() == vars["today"]  # 0 days -> settlement today
 
     # Tom/Next (T/N) forward: 1 settlement day
-    fwd_tn = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd_tn = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                           vars["maturity_date"], True, 1)
     assert fwd_tn.settlementDays() == 1
     assert fwd_tn.settlementDate() == vars["today"] + ql.Period(1, ql.Days)
 
     # Spot forward (S/N): 2 settlement days (default)
-    fwd_sn = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd_sn = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                           vars["maturity_date"], True)  # default settlementDays=2
     assert fwd_sn.settlementDays() == 2
     assert fwd_sn.settlementDate() == vars["today"] + ql.Period(2, ql.Days)
@@ -306,7 +310,7 @@ def test_settlement_days_with_calendar(common_vars):
     ql.Settings.instance().evaluationDate = friday
 
     # Forward with 2 settlement days using a calendar: settlement should skip the weekend
-    fwd = ql.FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
+    fwd = FxForward(usd_nominal, vars["usd"], sgd_nominal, vars["sgd"], 
                        vars["maturity_date"], True, 2, cal)
     expected_settlement = cal.advance(friday, ql.Period(2, ql.Days))
     assert fwd.settlementDate() == expected_settlement
