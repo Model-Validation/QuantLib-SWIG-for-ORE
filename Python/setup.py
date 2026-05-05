@@ -26,11 +26,15 @@ def is_debug_quantlib():
     return os.getenv("QL_DEBUG", "False").lower() in ("true", "1", "t")
 
 
-def define_macros(py_limited_api):
+def define_macros():
 
     define_macros = []
-    if py_limited_api:
+
+    if py_limited_api():
         define_macros += [("Py_LIMITED_API", "0x03080000")]
+
+    if free_threading():
+        define_macros += [("SWIGPYTHON_NOGIL", None), ("Py_GIL_DISABLED", None)]
 
     compiler = get_default_compiler()
 
@@ -126,7 +130,7 @@ def extra_compile_args():
     compiler = get_default_compiler()
 
     if compiler == "msvc":
-        extra_compile_args = ["/GR", "/FD", "/Zm250", "/EHsc", "/bigobj", "/std:c++17"]
+        extra_compile_args = ["/GR", "/FD", "/Zm250", "/EHsc", "/bigobj", "/std:c++20"]
 
         if is_debug_quantlib():
             if "QL_STATIC_RUNTIME" in os.environ:
@@ -197,10 +201,10 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: Financial and Insurance Industry",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: C++",
     "Programming Language :: Python",
+    "Programming Language :: Python :: Free Threading :: 1 - Unstable",
     "Topic :: Office/Business :: Financial",
     "Topic :: Scientific/Engineering",
 ]
@@ -212,27 +216,29 @@ a comprehensive software framework for quantitative finance.
 """
 
 
-py_limited_api = (
-    platform.python_implementation() == "CPython"
-    and not sysconfig.get_config_var("Py_GIL_DISABLED")
-)
+def py_limited_api():
+    return platform.python_implementation() == "CPython" and not free_threading()
+
+
+def free_threading():
+    return bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 
 
 with open("./setup.cfg", "w") as f:
-    if py_limited_api:
+    if py_limited_api():
         f.write("[bdist_wheel]" + os.linesep + "py_limited_api=cp38" + os.linesep)
 
 
 setup(
     name="QuantLib",
-    version="1.41",
+    version="1.42.1",
     description="Python bindings for the QuantLib library",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     author="QuantLib Team",
     author_email="quantlib-users@lists.sourceforge.net",
     url="https://www.quantlib.org",
-    license="BSD 3-Clause",
+    license="BSD-3-Clause",
     classifiers=classifiers,
     package_dir={"": "src"},
     py_modules=["QuantLib.__init__", "QuantLib.QuantLib"],
@@ -240,8 +246,8 @@ setup(
         Extension(
             name="QuantLib._QuantLib",
             sources=["src/QuantLib/quantlib_wrap.cpp"],
-            py_limited_api=py_limited_api,
-            define_macros=define_macros(py_limited_api),
+            py_limited_api=py_limited_api(),
+            define_macros=define_macros(),
             include_dirs=include_dirs(),
             library_dirs=library_dirs(),
             libraries=libraries(),

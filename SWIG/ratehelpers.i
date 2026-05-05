@@ -33,7 +33,6 @@
 %include swap.i
 
 %{
-using QuantLib::Pillar;
 using QuantLib::RateHelper;
 using QuantLib::DepositRateHelper;
 using QuantLib::FraRateHelper;
@@ -42,7 +41,6 @@ using QuantLib::SwapRateHelper;
 using QuantLib::BondHelper;
 using QuantLib::FixedRateBondHelper;
 using QuantLib::OISRateHelper;
-using QuantLib::DatedOISRateHelper;
 using QuantLib::FxSwapRateHelper;
 using QuantLib::OvernightIndexFutureRateHelper;
 using QuantLib::SofrFutureRateHelper;
@@ -51,11 +49,8 @@ using QuantLib::ConstNotionalCrossCurrencyBasisSwapRateHelper;
 using QuantLib::MtMCrossCurrencyBasisSwapRateHelper;
 using QuantLib::IborIborBasisSwapRateHelper;
 using QuantLib::OvernightIborBasisSwapRateHelper;
+using QuantLib::MultipleResetsSwapRateHelper;
 %}
-
-struct Pillar {
-    enum Choice { MaturityDate, LastRelevantDate, CustomDate};
-};
 
 %shared_ptr(RateHelper)
 class RateHelper : public Observable {
@@ -501,35 +496,6 @@ class OISRateHelper : public RateHelper {
     ext::shared_ptr<OvernightIndexedSwap> swap();
 };
 
-%shared_ptr(DatedOISRateHelper)
-class DatedOISRateHelper : public RateHelper {
-    #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
-    %feature("kwargs") DatedOISRateHelper;
-    #endif
-  public:
-    DatedOISRateHelper(
-            const Date& startDate,
-            const Date& endDate,
-            const Handle<Quote>& rate,
-            const ext::shared_ptr<OvernightIndex>& index,
-            const Handle<YieldTermStructure>& discountingCurve = {},
-            bool telescopicValueDates = false, 
-            RateAveraging::Type averagingMethod = RateAveraging::Compound,
-            Integer paymentLag = 0,
-            BusinessDayConvention paymentConvention = Following,
-            Frequency paymentFrequency = Annual,
-            const Calendar& paymentCalendar = Calendar(),
-            Spread overnightSpread = 0.0,
-            ext::optional<bool> endOfMonth = ext::nullopt,
-            ext::optional<Frequency> fixedPaymentFrequency = ext::nullopt,
-            const Calendar& fixedCalendar = Calendar(),
-            Natural lookbackDays = Null<Natural>(),
-            Natural lockoutDays = 0,
-            bool applyObservationShift = false,
-            const ext::shared_ptr<FloatingRateCouponPricer>& pricer = {});
-    ext::shared_ptr<OvernightIndexedSwap> swap();
-};
-
 %shared_ptr(FxSwapRateHelper)
 class FxSwapRateHelper : public RateHelper {
     #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
@@ -573,6 +539,9 @@ class FxSwapRateHelper : public RateHelper {
 
 %shared_ptr(OvernightIndexFutureRateHelper)
 class OvernightIndexFutureRateHelper : public RateHelper {
+    #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
+    %feature("kwargs") OvernightIndexFutureRateHelper;
+    #endif
   public:
     OvernightIndexFutureRateHelper(
             const Handle<Quote>& price,
@@ -580,25 +549,44 @@ class OvernightIndexFutureRateHelper : public RateHelper {
             const Date& maturityDate,
             const ext::shared_ptr<OvernightIndex>& index,
             const Handle<Quote>& convexityAdjustment = Handle<Quote>(), 
-            RateAveraging::Type averagingMethod = RateAveraging::Compound);
+            RateAveraging::Type averagingMethod = RateAveraging::Compound,
+            Pillar::Choice pillar = Pillar::LastRelevantDate,
+            const Date& customPillarDate = Date());
 
     Real convexityAdjustment() const;
 };
 
 %shared_ptr(SofrFutureRateHelper)
 class SofrFutureRateHelper : public OvernightIndexFutureRateHelper {
+    #if defined(SWIGPYTHON)
+    %feature("kwargs") SofrFutureRateHelper;
+    #endif
   public:
+    #if defined(SWIGPYTHON)
+    SofrFutureRateHelper(const std::variant<Real, Handle<Quote>>& price,
+                         Month referenceMonth,
+                         Year referenceYear,
+                         Frequency referenceFreq,
+                         const std::variant<Real, Handle<Quote>>& convexityAdjustment = 0.0,
+                         Pillar::Choice pillar = Pillar::LastRelevantDate,
+                         const Date& customPillarDate = Date());
+    #else
     SofrFutureRateHelper(const Handle<Quote>& price,
                          Month referenceMonth,
                          Year referenceYear,
                          Frequency referenceFreq,
-                         const Handle<Quote>& convexityAdjustment = Handle<Quote>());
+                         const Handle<Quote>& convexityAdjustment = {},
+                         Pillar::Choice pillar = Pillar::LastRelevantDate,
+                         const Date& customPillarDate = Date());
 
     SofrFutureRateHelper(Real price,
                          Month referenceMonth,
                          Year referenceYear,
                          Frequency referenceFreq,
-                         Real convexityAdjustment = 0.0);
+                         Real convexityAdjustment = 0.0,
+                         Pillar::Choice pillar = Pillar::LastRelevantDate,
+                         const Date& customPillarDate = Date());
+    #endif
 };
 
 %shared_ptr(ConstNotionalCrossCurrencySwapRateHelper)
@@ -685,6 +673,24 @@ class OvernightIborBasisSwapRateHelper : public RateHelper {
                                      Handle<YieldTermStructure> discountHandle = Handle<YieldTermStructure>());
     ext::shared_ptr<Swap> swap();
 };
+
+%shared_ptr(MultipleResetsSwapRateHelper)
+class MultipleResetsSwapRateHelper : public RateHelper {
+  public:
+    MultipleResetsSwapRateHelper(
+        Natural settlementDays,
+        const Period& tenor,
+        const std::variant<Rate, Handle<Quote>>& fixedRate,
+        const ext::shared_ptr<IborIndex>& iborIndex,
+        Size resetsPerCoupon,
+        Handle<YieldTermStructure> discountingCurve = {},
+        RateAveraging::Type averagingMethod = RateAveraging::Compound,
+        Spread spread = 0.0,
+        Frequency fixedFrequency = NoFrequency,
+        DayCounter fixedDayCount = DayCounter(),
+        BusinessDayConvention fixedConvention = ModifiedFollowing);
+};
+
 
 // allow use of RateHelper vectors
 #if defined(SWIGCSHARP)
