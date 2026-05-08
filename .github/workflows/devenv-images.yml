@@ -7,9 +7,9 @@ jobs:
   docker-images-base:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Checkout latest QuantLib master
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         repository: lballabio/QuantLib
         path: dockerfiles/QuantLib
@@ -17,9 +17,9 @@ jobs:
       working-directory: dockerfiles
       run: |
         rm -rf QuantLib/.git
-        docker build -f ci.base.Dockerfile --build-arg tag=noble -t ghcr.io/lballabio/quantlib-swig-devenv:base .
+        docker build -f ci.base.Dockerfile -t ghcr.io/lballabio/quantlib-swig-devenv:base .
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
@@ -34,13 +34,13 @@ jobs:
       matrix:
         tag: [default, threadsafe]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Build Docker images
       working-directory: dockerfiles
       run: |
         docker build -f ci.${{ matrix.tag }}.Dockerfile -t ghcr.io/lballabio/quantlib-swig-devenv:${{ matrix.tag }} .
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
@@ -55,13 +55,13 @@ jobs:
       matrix:
         lang: [python, csharp, java, r]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Build Docker images
       working-directory: dockerfiles
       run: |
         docker build -f ci.${{ matrix.lang }}.Dockerfile -t ghcr.io/lballabio/quantlib-swig-devenv:${{ matrix.lang }} .
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
@@ -76,13 +76,13 @@ jobs:
       matrix:
         lang: [scala]
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Build Docker images
       working-directory: dockerfiles
       run: |
         docker build -f ci.${{ matrix.lang }}.Dockerfile -t ghcr.io/lballabio/quantlib-swig-devenv:${{ matrix.lang }} .
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}

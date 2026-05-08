@@ -152,9 +152,21 @@ export_piecewise_curve(PiecewiseLogLinearDiscount,Discount,LogLinear);
 export_piecewise_curve(PiecewiseLinearForward,ForwardRate,Linear);
 export_piecewise_curve(PiecewiseLinearZero,ZeroYield,Linear);
 export_piecewise_curve(PiecewiseCubicZero,ZeroYield,Cubic);
-export_piecewise_curve(PiecewiseLogCubicDiscount,Discount,MonotonicLogCubic);
+export_piecewise_curve(PiecewiseLogCubicDiscount,Discount,LogCubic);
+#if defined(SWIGPYTHON)
+export_piecewise_curve(_PiecewiseSplineCubicDiscount,Discount,SplineCubic);
+deprecate_feature_with_message(
+    PiecewiseSplineCubicDiscount,
+    _PiecewiseSplineCubicDiscount,
+    "use PiecewiseNaturalLogCubicDiscount because discount curves should use log interpolations");
+#else
 export_piecewise_curve(PiecewiseSplineCubicDiscount,Discount,SplineCubic);
+#endif
+#if defined(SWIGPYTHON)
+deprecate_feature(PiecewiseKrugerZero, PiecewiseCubicZero);
+#else
 export_piecewise_curve(PiecewiseKrugerZero,ZeroYield,Kruger);
+#endif
 export_piecewise_curve(PiecewiseKrugerLogDiscount,Discount,KrugerLog);
 export_piecewise_curve(PiecewiseConvexMonotoneForward,ForwardRate,ConvexMonotone);
 export_piecewise_curve(PiecewiseConvexMonotoneZero,ZeroYield,ConvexMonotone);
@@ -285,24 +297,36 @@ class Name : public YieldTermStructure {
     #endif
   public:
     %extend {
-        Name(Handle<YieldTermStructure> baseCurve,
+        Name(const Handle<YieldTermStructure>& baseCurve,
              const std::vector<ext::shared_ptr<RateHelper> >& instruments,
              const Interpolator& interpolator = Interpolator(),
              const _IterativeBootstrap& bootstrap = _IterativeBootstrap()) {
             return new Name(baseCurve, instruments, interpolator, make_bootstrap<Name>(bootstrap));
         }
     }
-
+    const Handle<YieldTermStructure>& baseCurve() const;
     const std::vector<Date>& dates() const;
     const std::vector<Time>& times() const;
     const std::vector<Real>& data() const;
     #if !defined(SWIGR)
     std::vector<std::pair<Date,Real> > nodes() const;
     #endif
+
+    void recalculate();
+    void freeze();
+    void unfreeze();
 };
 
 %enddef
 
+export_piecewise_spread_curve(PiecewiseLogLinearSpreadDiscount,Discount,LogLinear);
+#if defined(SWIGPYTHON)
+deprecate_feature(PiecewiseLogLinearDiscountSpread, PiecewiseLogLinearSpreadDiscount);
+#else
 export_piecewise_spread_curve(PiecewiseLogLinearDiscountSpread,Discount,LogLinear);
+#endif
+export_piecewise_spread_curve(PiecewiseLogCubicSpreadDiscount,Discount,LogCubic);
+export_piecewise_spread_curve(PiecewiseNaturalLogCubicSpreadDiscount,Discount,SplineLogCubic);
+export_piecewise_spread_curve(PiecewiseLogMixedLinearCubicSpreadDiscount,Discount,LogMixedLinearCubic);
 
 #endif

@@ -26,10 +26,14 @@
 
 %{
 using QuantLib::InterpolatedDiscountCurve;
+using QuantLib::YieldTermStructure;
 %}
 
 %shared_ptr(InterpolatedDiscountCurve<LogLinear>);
+%shared_ptr(InterpolatedDiscountCurve<LogCubic>);
+#if !defined(SWIGPYTHON)
 %shared_ptr(InterpolatedDiscountCurve<MonotonicLogCubic>);
+#endif
 %shared_ptr(InterpolatedDiscountCurve<SplineCubic>);
 %shared_ptr(InterpolatedDiscountCurve<KrugerLog>);
 %shared_ptr(InterpolatedDiscountCurve<SplineLogCubic>);
@@ -44,7 +48,10 @@ class InterpolatedDiscountCurve : public YieldTermStructure {
                               const std::vector<DiscountFactor>& discounts,
                               const DayCounter& dayCounter,
                               const Calendar& calendar = Calendar(),
-                              const Interpolator& i = Interpolator());
+                              const Interpolator& i = Interpolator(),
+                              const YieldTermStructure::Extrapolation extrapolation =
+                              YieldTermStructure::Extrapolation::ContinuousForward,
+                              const bool excludeTimeZeroFromInterpolation = false);
     const std::vector<Time>& times() const;
     const std::vector<Real>& data() const;
     const std::vector<Date>& dates() const;
@@ -55,8 +62,21 @@ class InterpolatedDiscountCurve : public YieldTermStructure {
 };
 
 %template(DiscountCurve) InterpolatedDiscountCurve<LogLinear>;
+%template(LogCubicDiscountCurve) InterpolatedDiscountCurve<LogCubic>;
+#if defined(SWIGPYTHON)
+deprecate_feature(MonotonicLogCubicDiscountCurve, LogCubicDiscountCurve);
+#else
 %template(MonotonicLogCubicDiscountCurve) InterpolatedDiscountCurve<MonotonicLogCubic>;
+#endif
+#if defined(SWIGPYTHON)
+%template(_NaturalCubicDiscountCurve) InterpolatedDiscountCurve<SplineCubic>;
+deprecate_feature_with_message(
+    NaturalCubicDiscountCurve,
+    _NaturalCubicDiscountCurve,
+    "use NaturalLogCubicDiscountCurve because discount curves should use log interpolations");
+#else
 %template(NaturalCubicDiscountCurve) InterpolatedDiscountCurve<SplineCubic>;
+#endif
 %template(KrugerLogDiscountCurve) InterpolatedDiscountCurve<KrugerLog>;
 %template(NaturalLogCubicDiscountCurve) InterpolatedDiscountCurve<SplineLogCubic>;
 %template(LogMixedLinearCubicDiscountCurve) InterpolatedDiscountCurve<LogMixedLinearCubic>;

@@ -24,6 +24,7 @@
 
 %{
 using QuantLib::InterpolatedForwardCurve;
+using QuantLib::YieldTermStructure;
 %}
 
 %shared_ptr(InterpolatedForwardCurve<BackwardFlat>);
@@ -42,7 +43,10 @@ class InterpolatedForwardCurve : public YieldTermStructure {
                              const std::vector<Rate>& forwards,
                              const DayCounter& dayCounter,
                              const Calendar& calendar = Calendar(),
-                             const Interpolator& i = Interpolator());
+                             const Interpolator& i = Interpolator(),
+                             const YieldTermStructure::Extrapolation extrapolation =
+                             YieldTermStructure::Extrapolation::ContinuousForward,
+                             const bool excludeTimeZeroFromInterpolation = false);
     const std::vector<Date>& dates() const;
     const std::vector<Rate>& forwards() const;
     #if !defined(SWIGR)

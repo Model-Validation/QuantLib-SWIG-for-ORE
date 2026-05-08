@@ -185,7 +185,7 @@ class TermStructureTest(unittest.TestCase):
         alpha = 0.05
         baseCrvHandle = ql.YieldTermStructureHandle(self.termStructure)
         ufrCrv = ql.UltimateForwardTermStructure(
-            baseCrvHandle, llfr, ufr, fsp, alpha)
+            baseCrvHandle, llfr, ufr, fsp, alpha, None)
         cutOff = ufrCrv.timeFromReference(settlement + fsp)
         forwardCalculator = extrapolatedForwardRate(
             cutOff, llfr.value(), ufr.value(), alpha)
@@ -245,6 +245,24 @@ class TermStructureTest(unittest.TestCase):
                     second=actual,
                     delta=1.0e-12,
                     msg=failMsg)
+
+    def testTermStructureInterpolationCompatibility(self):
+        """Testing different interpolation schemes compatibility"""
+        args = (self.settlement, self.instruments, self.dayCounter, ql.IterativeBootstrap())
+        types = {
+            ql.PiecewiseLogCubicDiscount: [
+                ql.LogCubic, ql.MonotonicLogCubic, ql.SplineLogCubic, ql.KrugerLog,
+                ql.LogParabolicCubic, ql.MonotonicLogParabolicCubic
+            ],
+            ql.PiecewiseCubicZero: [
+                ql.Cubic, ql.MonotonicCubic, ql.SplineCubic, ql.Kruger,
+                ql.ParabolicCubic, ql.MonotonicParabolicCubic
+            ],
+        }
+        for curve_type, inter_types in types.items():
+            for interp_type in inter_types:
+                curve = curve_type(*args, interp_type())
+                self.assertEqual(len(curve.nodes()), len(self.instruments) + 1)
 
     def testInterpolatedPiecewiseZeroSpreadedTermStructure(self):
         """Testing different interpolation schemes for zero spreaded term structure"""
