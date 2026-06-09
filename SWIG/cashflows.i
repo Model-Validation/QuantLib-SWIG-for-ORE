@@ -1001,7 +1001,8 @@ Leg _CmsLeg(const std::vector<Real>& nominals,
             const Calendar& exCouponCalendar = Calendar(),
             const BusinessDayConvention exCouponConvention = Unadjusted,
             bool exCouponEndOfMonth = false,
-            BusinessDayConvention fixingConvention = Preceding) {
+            BusinessDayConvention fixingConvention = Preceding,
+            Integer paymentLag = 0) {
     return QuantLib::CmsLeg(schedule, index)
         .withNotionals(nominals)
         .withPaymentDayCounter(paymentDayCounter)
@@ -1014,7 +1015,8 @@ Leg _CmsLeg(const std::vector<Real>& nominals,
         .withFloors(floors)
         .withExCouponPeriod(exCouponPeriod, exCouponCalendar,
                             exCouponConvention, exCouponEndOfMonth)
-        .inArrears(isInArrears);
+        .inArrears(isInArrears)
+        .withPaymentLag(paymentLag);
 }
 %}
 #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
@@ -1036,7 +1038,8 @@ Leg _CmsLeg(const std::vector<Real>& nominals,
             const Calendar& exCouponCalendar = Calendar(),
             const BusinessDayConvention exCouponConvention = Unadjusted,
             bool exCouponEndOfMonth = false,
-            BusinessDayConvention fixingConvention = Preceding);
+            BusinessDayConvention fixingConvention = Preceding,
+            Integer paymentLag = 0);
 
 %{
 Leg _CmsZeroLeg(const std::vector<Real>& nominals,
@@ -1097,7 +1100,8 @@ Leg _CmsSpreadLeg(const std::vector<Real>& nominals,
             const std::vector<Spread>& spreads = std::vector<Spread>(),
             const std::vector<Rate>& caps = std::vector<Rate>(),
             const std::vector<Rate>& floors = std::vector<Rate>(),
-            bool isInArrears = false) {
+            bool isInArrears = false,
+            Integer paymentLag = 0) {
     return QuantLib::CmsSpreadLeg(schedule, index)
         .withNotionals(nominals)
         .withPaymentDayCounter(paymentDayCounter)
@@ -1107,7 +1111,8 @@ Leg _CmsSpreadLeg(const std::vector<Real>& nominals,
         .withSpreads(spreads)
         .withCaps(caps)
         .withFloors(floors)
-        .inArrears(isInArrears);
+        .inArrears(isInArrears)
+        .withPaymentLag(paymentLag);
 }
 %}
 #if !defined(SWIGJAVA) && !defined(SWIGCSHARP)
@@ -1124,7 +1129,8 @@ Leg _CmsSpreadLeg(const std::vector<Real>& nominals,
             const std::vector<Spread>& spreads = std::vector<Spread>(),
             const std::vector<Rate>& caps = std::vector<Rate>(),
             const std::vector<Rate>& floors = std::vector<Rate>(),
-            bool isInArrears = false);
+            bool isInArrears = false,
+            Integer paymentLag = 0);
 
 %{
 Leg _MultipleResetsLeg(const Schedule& fullResetSchedule,
