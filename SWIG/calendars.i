@@ -227,7 +227,7 @@ namespace QuantLib {
 
     class Israel : public Calendar {
       public:
-        enum Market { Settlement, TASE, SHIR };
+        enum Market { Settlement, TASE, Telbor, SHIR };
         Israel(Market m = Settlement);
     };
 
